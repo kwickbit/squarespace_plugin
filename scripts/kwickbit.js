@@ -60,11 +60,4 @@ function initKwickbit() {
   window.kwickbitItems = items;
 }
 
-// Run initialization when DOM is loaded or defer if already loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initKwickbit);
-} else {
-  // DOM already loaded, wait for potential bootstrap data to be ready
-  console.log('DOM already loaded, waiting for bootstrap data');
-  setTimeout(initKwickbit, 500);
-}
+document.addEventListener('DOMContentLoaded', initKwickbit);
