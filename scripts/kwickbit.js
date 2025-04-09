@@ -65,5 +65,6 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initKwickbit);
 } else {
   // DOM already loaded, wait for potential bootstrap data to be ready
+  console.log('DOM already loaded, waiting for bootstrap data');
   setTimeout(initKwickbit, 500);
 }
