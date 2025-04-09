@@ -8,7 +8,7 @@
     {squarespace-headers}
   </head>
   <body id="{squarespace.page-id}" class="{squarespace.page-classes}">
-    <p>Auf Wiedersehen, Jupiter!</p>
+    <p>Vale, Juppiter!</p>
     <div class="site-container">
 
       <header class="site-header">
