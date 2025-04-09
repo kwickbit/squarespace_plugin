@@ -8,7 +8,7 @@
     {squarespace-headers}
   </head>
   <body id="{squarespace.page-id}" class="{squarespace.page-classes}">
-    <p>Auf Wiedersehen, Venus!</p>
+    <p>Auf Wiedersehen, Jupiter!</p>
     <div class="site-container">
 
       <header class="site-header">
@@ -49,9 +49,9 @@
 
     <!-- combo and minify scripts when not logged in -->
     <squarespace:script src="site.js" combo="{.if authenticatedAccount}false{.or}true{.end}" />
-    
+
     <!-- Kwickbit integration script -->
-    <squarespace:script src="kwickbit.js" combo="true" />
+    <squarespace:script src="kwickbit.js" combo="false" />
 
     <!-- other scripts, and footer code injection -->
     {squarespace-footers}
