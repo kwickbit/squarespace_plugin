@@ -60,4 +60,75 @@ function initKwickbit() {
   window.kwickbitItems = items;
 }
 
-document.addEventListener('DOMContentLoaded', initKwickbit);
+/**
+ * Insert Kwickbit payment button and change greeting
+ */
+function insertKwickbitButton() {
+  // Change greeting text
+  const greetingElement = document.querySelector('p');
+  if (greetingElement) {
+    greetingElement.textContent = "";
+  }
+
+  // Create Kwickbit payment button
+  const button = document.createElement('div');
+  button.className = 'kwickbit-button';
+  button.innerHTML = `
+    <img src="/assets/kwickbit-logo.png" alt="KwickBit Logo" class="kwickbit-logo">
+    <div class="kwickbit-text">
+      <div class="kwickbit-primary">Pay with crypto</div>
+      <div class="kwickbit-secondary">Powered by KwickBit</div>
+    </div>
+  `;
+
+  // Style the button
+  button.style.display = 'flex';
+  button.style.alignItems = 'center';
+  button.style.padding = '10px 20px';
+  button.style.background = '#4A56FF';
+  button.style.color = 'white';
+  button.style.borderRadius = '4px';
+  button.style.margin = '20px 0';
+  button.style.cursor = 'pointer';
+  button.style.width = 'fit-content';
+
+  // Style the logo
+  const logo = button.querySelector('.kwickbit-logo');
+  logo.style.height = '24px';
+  logo.style.marginRight = '10px';
+
+  // Style the text container
+  const textDiv = button.querySelector('.kwickbit-text');
+  textDiv.style.display = 'flex';
+  textDiv.style.flexDirection = 'column';
+
+  // Style primary text
+  const primaryText = button.querySelector('.kwickbit-primary');
+  primaryText.style.fontWeight = 'bold';
+  primaryText.style.fontSize = '16px';
+
+  // Style secondary text
+  const secondaryText = button.querySelector('.kwickbit-secondary');
+  secondaryText.style.fontSize = '12px';
+  secondaryText.style.opacity = '0.8';
+
+  // Add hover effect
+  button.addEventListener('mouseover', function() {
+    this.style.background = '#3A46EF';
+  });
+
+  button.addEventListener('mouseout', function() {
+    this.style.background = '#4A56FF';
+  });
+
+  // Insert the button after the greeting
+  if (greetingElement && greetingElement.parentNode) {
+    greetingElement.parentNode.insertBefore(button, greetingElement.nextSibling);
+  }
+}
+
+// Initialize and insert button when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  initKwickbit();
+  insertKwickbitButton();
+});
