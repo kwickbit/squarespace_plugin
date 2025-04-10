@@ -67,14 +67,14 @@ function insertKwickbitButton() {
   // Change greeting text
   const greetingElement = document.querySelector('p');
   if (greetingElement) {
-    greetingElement.textContent = "¡Hola, amigo!";
+    greetingElement.textContent = "Salut, chéri";
   }
 
   // Create Kwickbit payment button
   const button = document.createElement('div');
   button.className = 'kwickbit-button';
   button.innerHTML = `
-    <img src="../assets/kwickbit-logo.png" alt="KwickBit Logo" class="kwickbit-logo">
+    <img src="/assets/logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
     <div class="kwickbit-text">
       <div class="kwickbit-primary">Pay with crypto</div>
       <div class="kwickbit-secondary">Powered by KwickBit</div>
