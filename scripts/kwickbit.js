@@ -58,6 +58,39 @@ function initKwickbit() {
 
   // Store the transformed items for later use
   window.kwickbitItems = items;
+
+  // Send cart data to checkout endpoint
+  sendCartData(items);
+}
+
+/**
+ * Send cart data to checkout endpoint
+ */
+function sendCartData(items) {
+  if (!items || items.length === 0) {
+    console.error('No items to send');
+    return;
+  }
+
+  fetch('http://localhost:3000/checkout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ items })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Checkout response:', data);
+  })
+  .catch(error => {
+    console.error('Checkout request failed:', error);
+  });
 }
 
 /**
@@ -67,7 +100,7 @@ function insertKwickbitButton() {
   // Change greeting text
   const greetingElement = document.querySelector('p');
   if (greetingElement) {
-    greetingElement.textContent = "Coucou, chéri";
+    greetingElement.textContent = "¡Hola, amigo!";
   }
 
   // Create Kwickbit payment button
