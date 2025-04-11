@@ -1,167 +1,138 @@
-/**
- * Kwickbit Squarespace Integration
- */
+(function() {
+  let transformedItems = [];
 
-/**
- * Extract bootstrap data from DOM
- */
-function getBootstrapData() {
-  try {
-    const bootstrapElement = document.getElementById('bootstrap');
-    if (!bootstrapElement || !bootstrapElement.textContent) {
-      console.error('Bootstrap element not found or empty');
+  function transformCartData(cartData) {
+    if (!cartData?.items || cartData.items.length === 0) {
+      return [];
+    }
+
+    return cartData.items.map(item => {
+      const imageUrl = item.image?.url || item.image?.urls?.https;
+
+      return {
+        name: item.productName || 'Unknown Product',
+        quantity: item.quantity || 1,
+        price: item.unitPrice?.value || 0,
+        currency: item.unitPrice?.currencyCode || 'EUR',
+        ...(imageUrl && { image_url: imageUrl })
+      };
+    });
+  }
+
+  function extractCartData() {
+    const cartRoot = document.getElementById('sqs-cart-root');
+    if (!cartRoot) return;
+
+    const scriptEl = cartRoot.querySelector('script[type="application/json"]');
+    if (!scriptEl) return;
+
+    try {
+      const cartData = JSON.parse(scriptEl.textContent);
+      const cart = cartData.cart;
+
+      transformedItems = transformCartData(cart);
+      console.log('Transformed items:', transformedItems);
+
+      return cart;
+    } catch (e) {
+      console.error('Parse error:', e);
       return null;
     }
-
-    return JSON.parse(bootstrapElement.textContent);
-  } catch (error) {
-    console.error('Error parsing bootstrap data:', error);
-    return null;
-  }
-}
-
-/**
- * Transform Squarespace cart data to Kwickbit format
- */
-function transformCartData(bootstrapData) {
-  if (!bootstrapData.shoppingCart?.items || bootstrapData.shoppingCart.items.length === 0) {
-    return [];
   }
 
-  return bootstrapData.shoppingCart.items.map(item => {
-    const imageUrl = item.image?.url || item.image?.urls?.https;
-
-    return {
-      name: item.productName || 'Unknown Product',
-      quantity: item.quantity || 1,
-      price: item.unitPrice?.value || 0,
-      currency: item.unitPrice?.currencyCode || 'EUR',
-      ...(imageUrl && { image_url: imageUrl })
+  function sendCheckoutRequest() {
+    const payload = {
+      items: transformedItems,
+      callbackSuccessUrl: 'https://example.com/success',
+      callbackFailedUrl: 'https://example.com/failed',
+      formDetails: {},
+      dynamicLinkId: 'd54bd850-f4d9-440d-bb2e-960771b86c25'
     };
-  });
-}
 
-/**
- * Initialize Kwickbit integration
- */
-function initKwickbit() {
-  console.log('Initializing Kwickbit integration');
-
-  const bootstrapData = getBootstrapData();
-  if (!bootstrapData) {
-    console.error('Failed to get bootstrap data');
-    return;
+    fetch('http://localhost:3000/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'b5384e0f-bb6e-491e-add4-379517618ce7'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Checkout response:', data);
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    })
+    .catch(error => console.error('Checkout error:', error));
   }
 
-  const items = transformCartData(bootstrapData);
-  console.log('Transformed cart data:', items);
-
-  // Store the transformed items for later use
-  window.kwickbitItems = items;
-
-  // Send cart data to checkout endpoint
-  sendCartData(items);
-}
-
-/**
- * Send cart data to checkout endpoint
- */
-function sendCartData(items) {
-  if (!items || items.length === 0) {
-    console.error('No items to send');
-    return;
-  }
-
-  fetch('http://localhost:3000/checkout', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ items })
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+  function insertSimpleElement() {
+    const cartSummary = document.querySelector('.cart-summary');
+    if (!cartSummary) {
+      setTimeout(insertSimpleElement, 500);
+      return;
     }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Checkout response:', data);
-  })
-  .catch(error => {
-    console.error('Checkout request failed:', error);
-  });
-}
+    // Create Kwickbit payment button
+    const button = document.createElement('div');
+    button.className = 'kwickbit-button';
+    button.innerHTML = `
+<div class="kwickbit-text">
+  <div class="kwickbit-primary">Pay with crypto</div>
+  <div class="kwickbit-secondary">Powered by KwickBit</div>
+</div>
+<img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
+`;
 
-/**
- * Insert Kwickbit payment button and change greeting
- */
-function insertKwickbitButton() {
-  // Change greeting text
-  const greetingElement = document.querySelector('p');
-  if (greetingElement) {
-    greetingElement.textContent = "¡Hola, amigo!";
+// Style the button
+    button.style.display = 'flex';
+    button.style.alignItems = 'center';
+    button.style.padding = '10px 20px';
+    button.style.background = '#4A56FF';
+    button.style.color = 'white';
+    button.style.borderRadius = '4px';
+    button.style.margin = '20px 0';
+    button.style.cursor = 'pointer';
+    button.style.width = 'fit-content';
+
+    // Style logo and text
+    const logo = button.querySelector('.kwickbit-logo');
+    logo.style.height = '24px';
+    logo.style.marginRight = '10px';
+
+    const textDiv = button.querySelector('.kwickbit-text');
+    textDiv.style.display = 'flex';
+    textDiv.style.flexDirection = 'column';
+
+    const primaryText = button.querySelector('.kwickbit-primary');
+    primaryText.style.fontWeight = 'bold';
+    primaryText.style.fontSize = '16px';
+
+    const secondaryText = button.querySelector('.kwickbit-secondary');
+    secondaryText.style.fontSize = '12px';
+    secondaryText.style.opacity = '0.8';
+
+    // Add hover effect
+    button.addEventListener('mouseover', function() {
+      this.style.background = '#3A46EF';
+    });
+    button.addEventListener('mouseout', function() {
+      this.style.background = '#4A56FF';
+    });
+
+    button.addEventListener('click', sendCheckoutRequest);
+
+    cartSummary.appendChild(button);
   }
 
-  // Create Kwickbit payment button
-  const button = document.createElement('div');
-  button.className = 'kwickbit-button';
-  button.innerHTML = `
-    <div class="kwickbit-text">
-      <div class="kwickbit-primary">Pay with crypto</div>
-      <div class="kwickbit-secondary">Powered by KwickBit</div>
-    </div>
-    <img src="/assets/logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
-  `;
-
-  // Style the button
-  button.style.display = 'flex';
-  button.style.alignItems = 'center';
-  button.style.padding = '10px 20px';
-  button.style.background = '#4A56FF';
-  button.style.color = 'white';
-  button.style.borderRadius = '4px';
-  button.style.margin = '20px 0';
-  button.style.cursor = 'pointer';
-  button.style.width = 'fit-content';
-
-  // Style the logo
-  const logo = button.querySelector('.kwickbit-logo');
-  logo.style.height = '24px';
-  logo.style.marginRight = '10px';
-
-  // Style the text container
-  const textDiv = button.querySelector('.kwickbit-text');
-  textDiv.style.display = 'flex';
-  textDiv.style.flexDirection = 'column';
-
-  // Style primary text
-  const primaryText = button.querySelector('.kwickbit-primary');
-  primaryText.style.fontWeight = 'bold';
-  primaryText.style.fontSize = '16px';
-
-  // Style secondary text
-  const secondaryText = button.querySelector('.kwickbit-secondary');
-  secondaryText.style.fontSize = '12px';
-  secondaryText.style.opacity = '0.8';
-
-  // Add hover effect
-  button.addEventListener('mouseover', function() {
-    this.style.background = '#3A46EF';
-  });
-
-  button.addEventListener('mouseout', function() {
-    this.style.background = '#4A56FF';
-  });
-
-  // Insert the button after the greeting
-  if (greetingElement && greetingElement.parentNode) {
-    greetingElement.parentNode.insertBefore(button, greetingElement.nextSibling);
+  function initialize() {
+    extractCartData();
+    insertSimpleElement();
   }
-}
 
-// Initialize and insert button when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  initKwickbit();
-  insertKwickbitButton();
-});
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+})();
