@@ -1,6 +1,47 @@
 (function() {
   let transformedItems = [];
 
+  // Add CSS styles
+  const style = document.createElement('style');
+  style.textContent = `
+    .kwickbit-button {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: #4A56FF;
+      color: white;
+      border-radius: 4px;
+      margin: 20px 0;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .kwickbit-button:hover {
+      background: #3A46EF;
+    }
+
+    .kwickbit-logo {
+      height: 24px;
+      margin-right: 10px;
+    }
+
+    .kwickbit-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kwickbit-primary {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .kwickbit-secondary {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  `;
+  document.head.appendChild(style);
+
   function transformCartData(cartData) {
     if (!cartData?.items || cartData.items.length === 0) {
       return [];
@@ -77,51 +118,14 @@
     const button = document.createElement('div');
     button.className = 'kwickbit-button';
     button.innerHTML = `
-<div class="kwickbit-text">
-  <div class="kwickbit-primary">Pay with crypto</div>
-  <div class="kwickbit-secondary">Powered by KwickBit</div>
-</div>
-<img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
-`;
-
-// Style the button
-    button.style.display = 'flex';
-    button.style.alignItems = 'center';
-    button.style.padding = '10px 20px';
-    button.style.background = '#4A56FF';
-    button.style.color = 'white';
-    button.style.borderRadius = '4px';
-    button.style.margin = '20px 0';
-    button.style.cursor = 'pointer';
-    button.style.width = 'fit-content';
-
-    // Style logo and text
-    const logo = button.querySelector('.kwickbit-logo');
-    logo.style.height = '24px';
-    logo.style.marginRight = '10px';
-
-    const textDiv = button.querySelector('.kwickbit-text');
-    textDiv.style.display = 'flex';
-    textDiv.style.flexDirection = 'column';
-
-    const primaryText = button.querySelector('.kwickbit-primary');
-    primaryText.style.fontWeight = 'bold';
-    primaryText.style.fontSize = '16px';
-
-    const secondaryText = button.querySelector('.kwickbit-secondary');
-    secondaryText.style.fontSize = '12px';
-    secondaryText.style.opacity = '0.8';
-
-    // Add hover effect
-    button.addEventListener('mouseover', function() {
-      this.style.background = '#3A46EF';
-    });
-    button.addEventListener('mouseout', function() {
-      this.style.background = '#4A56FF';
-    });
+      <div class="kwickbit-text">
+        <div class="kwickbit-primary">Pay with crypto</div>
+        <div class="kwickbit-secondary">Powered by KwickBit</div>
+      </div>
+      <img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
+    `;
 
     button.addEventListener('click', sendCheckoutRequest);
-
     cartSummary.appendChild(button);
   }
 
