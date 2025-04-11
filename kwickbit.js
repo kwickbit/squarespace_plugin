@@ -82,30 +82,58 @@
   }
 
   function sendCheckoutRequest() {
-    const payload = {
-      items: transformedItems,
-      callbackSuccessUrl: 'https://example.com/success',
-      callbackFailedUrl: 'https://example.com/failed',
-      formDetails: {},
-      dynamicLinkId: 'd54bd850-f4d9-440d-bb2e-960771b86c25'
-    };
+    // Create form element
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'http://localhost:3000/squarespace-checkout';
+    form.target = '_blank'; // Open in new tab
 
-    fetch('http://localhost:3000/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': 'b5384e0f-bb6e-491e-add4-379517618ce7'
-      },
-      body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Checkout response:', data);
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    })
-    .catch(error => console.error('Checkout error:', error));
+    // Create hidden input for items
+    const itemsInput = document.createElement('input');
+    itemsInput.type = 'hidden';
+    itemsInput.name = 'items';
+    itemsInput.value = JSON.stringify(transformedItems);
+    form.appendChild(itemsInput);
+
+    // Create hidden input for API key
+    const apiKeyInput = document.createElement('input');
+    apiKeyInput.type = 'hidden';
+    apiKeyInput.name = 'apiKey';
+    apiKeyInput.value = 'b5384e0f-bb6e-491e-add4-379517618ce7';
+    form.appendChild(apiKeyInput);
+
+    // Success URL
+    const successUrlInput = document.createElement('input');
+    successUrlInput.type = 'hidden';
+    successUrlInput.name = 'callbackSuccessUrl';
+    successUrlInput.value = 'https://example.com/success';
+    form.appendChild(successUrlInput);
+
+    // Failed URL
+    const failedUrlInput = document.createElement('input');
+    failedUrlInput.type = 'hidden';
+    failedUrlInput.name = 'callbackFailedUrl';
+    failedUrlInput.value = 'https://example.com/failed';
+    form.appendChild(failedUrlInput);
+
+    // Dynamic link ID
+    const dynamicLinkIdInput = document.createElement('input');
+    dynamicLinkIdInput.type = 'hidden';
+    dynamicLinkIdInput.name = 'dynamicLinkId';
+    dynamicLinkIdInput.value = 'd54bd850-f4d9-440d-bb2e-960771b86c25';
+    form.appendChild(dynamicLinkIdInput);
+
+    // Form details
+    const formDetailsInput = document.createElement('input');
+    formDetailsInput.type = 'hidden';
+    formDetailsInput.name = 'formDetails';
+    formDetailsInput.value = JSON.stringify({});
+    form.appendChild(formDetailsInput);
+
+    // Submit form
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
   }
 
   function insertSimpleElement() {
