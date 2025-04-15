@@ -42,6 +42,15 @@
   `;
   document.head.appendChild(style);
 
+  function checkForSuccessParameter() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('kb_payment') === 'success') {
+      clearCartViaAPI();
+      // Remove the parameter from URL to prevent multiple clears
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
   function transformCartData(cartData) {
     if (!cartData?.items || cartData.items.length === 0) {
       return [];
@@ -72,20 +81,53 @@
       const cart = cartData.cart;
 
       transformedItems = transformCartData(cart);
-      console.log('Transformed items:', transformedItems);
 
-      return cart;
+      return cartData;
     } catch (e) {
       console.error('Parse error:', e);
       return null;
     }
   }
 
+  function clearCartViaAPI(retryCount = 0, maxRetries = 10) {
+    // Find all remove buttons in the cart
+    const removeButtons = document.querySelectorAll('button.cart-row-remove');
+
+    if (!removeButtons || removeButtons.length === 0) {
+      if (retryCount < maxRetries) {
+        setTimeout(() => clearCartViaAPI(retryCount + 1, maxRetries), 500);
+        return false;
+      } else {
+        return false;
+      }
+    }
+
+    // Click each remove button with a slight delay between clicks
+    function clickButtonsSequentially(index) {
+      if (index >= removeButtons.length) {
+        window.location.reload();
+        return;
+      }
+
+      // Click the button
+      removeButtons[index].click();
+
+      // Wait for DOM update before clicking next button
+      setTimeout(() => {
+        clickButtonsSequentially(index + 1);
+      }, 300);
+    }
+
+    // Start the sequential clicking process
+    clickButtonsSequentially(0);
+    return true;
+  }
+
   function sendCheckoutRequest() {
     // Create form element
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = 'http://localhost:3000/squarespace-checkout';
+    form.action = 'http://localhost:3000/checkout/squarespace';
     form.target = '_blank'; // Open in new tab
 
     // Create hidden input for items
@@ -102,18 +144,18 @@
     apiKeyInput.value = 'b5384e0f-bb6e-491e-add4-379517618ce7';
     form.appendChild(apiKeyInput);
 
-    // Success URL
+    // Success URL with parameter - uses current page
     const successUrlInput = document.createElement('input');
     successUrlInput.type = 'hidden';
     successUrlInput.name = 'callbackSuccessUrl';
-    successUrlInput.value = 'https://example.com/success';
+    successUrlInput.value = `${window.location.href.split('?')[0]}?kb_payment=success`;
     form.appendChild(successUrlInput);
 
-    // Failed URL
+    // Failed URL - uses current page
     const failedUrlInput = document.createElement('input');
     failedUrlInput.type = 'hidden';
     failedUrlInput.name = 'callbackFailedUrl';
-    failedUrlInput.value = 'https://example.com/failed';
+    failedUrlInput.value = window.location.href.split('?')[0];
     form.appendChild(failedUrlInput);
 
     // Dynamic link ID
@@ -158,6 +200,7 @@
   }
 
   function initialize() {
+    checkForSuccessParameter();
     extractCartData();
     insertSimpleElement();
   }
