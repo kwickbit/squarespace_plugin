@@ -1,5 +1,6 @@
 (function() {
   let transformedItems = [];
+  const ORDER_UUID = "8c86687b-32d5-4c00-9a63-4d1c08cfbab3";
 
   // Add CSS styles
   const style = document.createElement('style');
@@ -39,15 +40,101 @@
       font-size: 12px;
       opacity: 0.8;
     }
+
+    .kwickbit-overlay {
+      position: fixed;
+      top: 25px;
+      left: 25px;
+      right: 25px;
+      bottom: 25px;
+      background-color: rgba(240, 240, 240, 0.85);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: all;
+    }
+
+    .kwickbit-overlay.visible {
+      opacity: 1;
+    }
+
+    .kwickbit-overlay-message {
+      font-size: 20px;
+      color: #444;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .kwickbit-overlay-subtext {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .kwickbit-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(74, 86, 255, 0.2);
+      border-radius: 50%;
+      border-top-color: #4A56FF;
+      animation: kwickbit-spin 1s linear infinite;
+    }
+
+    @keyframes kwickbit-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   `;
   document.head.appendChild(style);
+
+  function showProcessingOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'kwickbit-overlay';
+    overlay.id = 'kwickbit-processing-overlay';
+
+    const message = document.createElement('div');
+    message.className = 'kwickbit-overlay-message';
+    message.textContent = 'Processing your order...';
+
+    const subtext = document.createElement('div');
+    subtext.className = 'kwickbit-overlay-subtext';
+    subtext.textContent = 'You\'ll be redirected to your confirmation shortly';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'kwickbit-spinner';
+
+    overlay.appendChild(message);
+    overlay.appendChild(subtext);
+    overlay.appendChild(spinner);
+
+    document.body.appendChild(overlay);
+
+    // Force reflow before adding visible class for transition
+    overlay.offsetHeight;
+    overlay.classList.add('visible');
+
+    return overlay;
+  }
 
   function checkForSuccessParameter() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('kb_payment') === 'success') {
-      clearCartViaAPI();
+      // Show overlay first
+      const overlay = showProcessingOverlay();
+
       // Remove the parameter from URL to prevent multiple clears
       history.replaceState(null, '', window.location.pathname);
+
+      // Clear cart then redirect to order confirmation
+      clearCartViaAPI(0, 10, () => {
+        const domain = window.location.origin;
+        window.location.href = `${domain}/commerce/orders/${ORDER_UUID}`;
+      });
     }
   }
 
@@ -89,15 +176,19 @@
     }
   }
 
-  function clearCartViaAPI(retryCount = 0, maxRetries = 10) {
+  function clearCartViaAPI(retryCount = 0, maxRetries = 10, onComplete = null) {
     // Find all remove buttons in the cart
     const removeButtons = document.querySelectorAll('button.cart-row-remove');
 
     if (!removeButtons || removeButtons.length === 0) {
       if (retryCount < maxRetries) {
-        setTimeout(() => clearCartViaAPI(retryCount + 1, maxRetries), 500);
+        setTimeout(() => clearCartViaAPI(retryCount + 1, maxRetries, onComplete), 500);
         return false;
       } else {
+        // Execute callback even if no items found or all retries exhausted
+        if (onComplete && typeof onComplete === 'function') {
+          onComplete();
+        }
         return false;
       }
     }
@@ -105,7 +196,12 @@
     // Click each remove button with a slight delay between clicks
     function clickButtonsSequentially(index) {
       if (index >= removeButtons.length) {
-        window.location.reload();
+        // All buttons clicked, run callback if provided
+        if (onComplete && typeof onComplete === 'function') {
+          onComplete();
+        } else {
+          window.location.reload();
+        }
         return;
       }
 
