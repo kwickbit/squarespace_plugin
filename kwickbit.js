@@ -1,5 +1,5 @@
 (function() {
-  let transformedItems = [];
+  let rawCartData = null;
   const ORDER_UUID = "8c86687b-32d5-4c00-9a63-4d1c08cfbab3";
 
   // Add CSS styles
@@ -127,33 +127,18 @@
       // Show overlay first
       const overlay = showProcessingOverlay();
 
+      // Get order UUID from URL if available
+      const orderId = urlParams.get('orderId') || ORDER_UUID;
+
       // Remove the parameter from URL to prevent multiple clears
       history.replaceState(null, '', window.location.pathname);
 
       // Clear cart then redirect to order confirmation
       clearCartViaAPI(0, 10, () => {
         const domain = window.location.origin;
-        window.location.href = `${domain}/commerce/orders/${ORDER_UUID}`;
+        window.location.href = `${domain}/commerce/orders/${orderId}`;
       });
     }
-  }
-
-  function transformCartData(cartData) {
-    if (!cartData?.items || cartData.items.length === 0) {
-      return [];
-    }
-
-    return cartData.items.map(item => {
-      const imageUrl = item.image?.url || item.image?.urls?.https;
-
-      return {
-        name: item.productName || 'Unknown Product',
-        quantity: item.quantity || 1,
-        price: item.unitPrice?.value || 0,
-        currency: item.unitPrice?.currencyCode || 'EUR',
-        ...(imageUrl && { image_url: imageUrl })
-      };
-    });
   }
 
   function extractCartData() {
@@ -165,10 +150,7 @@
 
     try {
       const cartData = JSON.parse(scriptEl.textContent);
-      const cart = cartData.cart;
-
-      transformedItems = transformCartData(cart);
-
+      rawCartData = cartData;
       return cartData;
     } catch (e) {
       console.error('Parse error:', e);
@@ -226,12 +208,12 @@
     form.action = 'http://localhost:3000/checkout/squarespace';
     form.target = '_blank'; // Open in new tab
 
-    // Create hidden input for items
-    const itemsInput = document.createElement('input');
-    itemsInput.type = 'hidden';
-    itemsInput.name = 'items';
-    itemsInput.value = JSON.stringify(transformedItems);
-    form.appendChild(itemsInput);
+    // Create hidden input for raw cart data
+    const cartDataInput = document.createElement('input');
+    cartDataInput.type = 'hidden';
+    cartDataInput.name = 'ecommerceMetadata';
+    cartDataInput.value = JSON.stringify(rawCartData);
+    form.appendChild(cartDataInput);
 
     // Create hidden input for API key
     const apiKeyInput = document.createElement('input');
