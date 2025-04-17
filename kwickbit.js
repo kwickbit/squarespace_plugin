@@ -1,6 +1,5 @@
 (function() {
   let rawCartData = null;
-  const ORDER_UUID = "8c86687b-32d5-4c00-9a63-4d1c08cfbab3";
 
   // Add CSS styles
   const style = document.createElement('style');
@@ -127,8 +126,13 @@
       // Show overlay first
       const overlay = showProcessingOverlay();
 
-      // Get order UUID from URL if available
-      const orderId = urlParams.get('orderId') || ORDER_UUID;
+      // Get order UUID from URL; it should be set by the backend via payment page
+      const orderId = urlParams.get('orderId');
+      if (!orderId) {
+        console.error('No orderId found in URL parameters');
+        window.location.href = window.location.pathname;  // Redirect to cart page without params
+        return;
+      }
 
       // Remove the parameter from URL to prevent multiple clears
       history.replaceState(null, '', window.location.pathname);
