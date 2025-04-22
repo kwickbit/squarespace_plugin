@@ -126,11 +126,10 @@
       // Show overlay first
       const overlay = showProcessingOverlay();
 
-      // Get order UUID from URL; it should be set by the backend via payment page
+      // Get order ID from URL
       const orderId = urlParams.get('orderId');
       if (!orderId) {
         console.error('No orderId found in URL parameters');
-        window.location.href = window.location.pathname;  // Redirect to cart page without params
         return;
       }
 
@@ -210,7 +209,6 @@
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = 'http://localhost:3000/checkout/squarespace';
-    form.target = '_blank'; // Open in new tab
 
     // Create hidden input for raw cart data
     const cartDataInput = document.createElement('input');
