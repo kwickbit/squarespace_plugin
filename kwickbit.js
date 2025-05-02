@@ -103,7 +103,7 @@
 
     const subtext = document.createElement('div');
     subtext.className = 'kwickbit-overlay-subtext';
-    subtext.textContent = 'You\'ll be redirected to your confirmation shortly';
+    subtext.textContent = 'You should receive an order confirmation email shortly';
 
     const spinner = document.createElement('div');
     spinner.className = 'kwickbit-spinner';
@@ -127,20 +127,12 @@
       // Show overlay first
       const overlay = showProcessingOverlay();
 
-      // Get order ID from URL
-      const orderId = urlParams.get('orderId');
-      if (!orderId) {
-        console.error('No orderId found in URL parameters');
-        return;
-      }
-
       // Remove the parameter from URL to prevent multiple clears
       history.replaceState(null, '', window.location.pathname);
 
-      // Clear cart then redirect to order confirmation
+      // Clear cart then redirect to home
       clearCartViaAPI(0, 10, () => {
-        const domain = window.location.origin;
-        window.location.href = `${domain}/commerce/orders/${orderId}`;
+        window.location.href = window.location.origin;
       });
     }
   }
