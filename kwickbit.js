@@ -1,286 +1,179 @@
 (function() {
-  let rawCartData = null;
+  // Load CSS
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://cdn.jsdelivr.net/gh/kwickbit/squarespace_plugin@main/kwickbit.css';
+  document.head.appendChild(link);
 
-  // Add CSS styles
-  const style = document.createElement('style');
-  style.textContent = `
-    .kwickbit-button {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background: #4A56FF;
-      color: white;
-      border-radius: 4px;
-      margin: 20px 0;
-      cursor: pointer;
-      width: fit-content;
+  // Default configuration
+  const defaultConfig = {
+    apiKey: '',
+    dynamicLinkId: '',
+    baseUrl: 'https://payment.kwickbit.com',
+    buttonText: 'Pay with crypto',
+    buttonSubtext: 'Powered by KwickBit'
+  };
+
+  class KwickbitSquarespace {
+    constructor(config = {}) {
+      this.config = { ...defaultConfig, ...config };
+      this.rawCartData = null;
     }
 
-    .kwickbit-button:hover {
-      background: #3A46EF;
+    initialize() {
+      this.checkForSuccessParameter();
+      this.extractCartData();
+      this.insertPaymentButton();
     }
 
-    .kwickbit-logo {
-      height: 24px;
-      margin-right: 10px;
+    showProcessingOverlay() {
+      const overlay = document.createElement('div');
+      overlay.className = 'kwickbit-overlay';
+      overlay.id = 'kwickbit-processing-overlay';
+
+      overlay.innerHTML = `
+        <div class="kwickbit-overlay-message">Processing your order...</div>
+        <div class="kwickbit-overlay-subtext">You should receive an order confirmation email shortly</div>
+        <div class="kwickbit-spinner"></div>
+      `;
+
+      document.body.appendChild(overlay);
+      overlay.offsetHeight; // Force reflow
+      overlay.classList.add('visible');
+
+      return overlay;
     }
 
-    .kwickbit-text {
-      display: flex;
-      flex-direction: column;
-      margin-right: 10px;
-    }
-
-    .kwickbit-primary {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .kwickbit-secondary {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-
-    .kwickbit-overlay {
-      position: fixed;
-      top: 25px;
-      left: 25px;
-      right: 25px;
-      bottom: 25px;
-      background-color: rgba(240, 240, 240, 0.85);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: all;
-    }
-
-    .kwickbit-overlay.visible {
-      opacity: 1;
-    }
-
-    .kwickbit-overlay-message {
-      font-size: 20px;
-      color: #444;
-      margin-bottom: 15px;
-      font-weight: 500;
-    }
-
-    .kwickbit-overlay-subtext {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .kwickbit-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(74, 86, 255, 0.2);
-      border-radius: 50%;
-      border-top-color: #4A56FF;
-      animation: kwickbit-spin 1s linear infinite;
-    }
-
-    @keyframes kwickbit-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(style);
-
-  function showProcessingOverlay() {
-    const overlay = document.createElement('div');
-    overlay.className = 'kwickbit-overlay';
-    overlay.id = 'kwickbit-processing-overlay';
-
-    const message = document.createElement('div');
-    message.className = 'kwickbit-overlay-message';
-    message.textContent = 'Processing your order...';
-
-    const subtext = document.createElement('div');
-    subtext.className = 'kwickbit-overlay-subtext';
-    subtext.textContent = 'You should receive an order confirmation email shortly';
-
-    const spinner = document.createElement('div');
-    spinner.className = 'kwickbit-spinner';
-
-    overlay.appendChild(message);
-    overlay.appendChild(subtext);
-    overlay.appendChild(spinner);
-
-    document.body.appendChild(overlay);
-
-    // Force reflow before adding visible class for transition
-    overlay.offsetHeight;
-    overlay.classList.add('visible');
-
-    return overlay;
-  }
-
-  function checkForSuccessParameter() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('kb_payment') === 'success') {
-      // Show overlay first
-      const overlay = showProcessingOverlay();
-
-      // Remove the parameter from URL to prevent multiple clears
-      history.replaceState(null, '', window.location.pathname);
-
-      // Clear cart then redirect to home
-      clearCartViaAPI(0, 10, () => {
-        window.location.href = window.location.origin;
-      });
-    }
-  }
-
-  function extractCartData() {
-    const cartRoot = document.getElementById('sqs-cart-root');
-    if (!cartRoot) return;
-
-    const scriptEl = cartRoot.querySelector('script[type="application/json"]');
-    if (!scriptEl) return;
-
-    try {
-      const cartData = JSON.parse(scriptEl.textContent);
-      rawCartData = cartData;
-      return cartData;
-    } catch (e) {
-      console.error('Parse error:', e);
-      return null;
-    }
-  }
-
-  function clearCartViaAPI(retryCount = 0, maxRetries = 10, onComplete = null) {
-    // Find all remove buttons in the cart
-    const removeButtons = document.querySelectorAll('button.cart-row-remove');
-
-    if (!removeButtons || removeButtons.length === 0) {
-      if (retryCount < maxRetries) {
-        setTimeout(() => clearCartViaAPI(retryCount + 1, maxRetries, onComplete), 500);
-        return false;
-      } else {
-        // Execute callback even if no items found or all retries exhausted
-        if (onComplete && typeof onComplete === 'function') {
-          onComplete();
-        }
-        return false;
+    checkForSuccessParameter() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('kb_payment') === 'success') {
+        this.showProcessingOverlay();
+        history.replaceState(null, '', window.location.pathname);
+        this.clearCartViaAPI(0, 10, () => {
+          window.location.href = window.location.origin;
+        });
       }
     }
 
-    // Click each remove button with a slight delay between clicks
-    function clickButtonsSequentially(index) {
-      if (index >= removeButtons.length) {
-        // All buttons clicked, run callback if provided
-        if (onComplete && typeof onComplete === 'function') {
-          onComplete();
+    extractCartData() {
+      const cartRoot = document.getElementById('sqs-cart-root');
+      if (!cartRoot) return null;
+
+      const scriptEl = cartRoot.querySelector('script[type="application/json"]');
+      if (!scriptEl) return null;
+
+      try {
+        this.rawCartData = JSON.parse(scriptEl.textContent);
+        return this.rawCartData;
+      } catch (e) {
+        console.error('Parse error:', e);
+        return null;
+      }
+    }
+
+    clearCartViaAPI(retryCount = 0, maxRetries = 10, onComplete = null) {
+      const removeButtons = document.querySelectorAll('button.cart-row-remove');
+
+      if (!removeButtons || removeButtons.length === 0) {
+        if (retryCount < maxRetries) {
+          setTimeout(() => this.clearCartViaAPI(retryCount + 1, maxRetries, onComplete), 500);
+          return false;
         } else {
-          window.location.reload();
+          if (onComplete) onComplete();
+          return false;
         }
+      }
+
+      // Click buttons sequentially
+      const clickNext = (index) => {
+        if (index >= removeButtons.length) {
+          if (onComplete) onComplete();
+          else window.location.reload();
+          return;
+        }
+        removeButtons[index].click();
+        setTimeout(() => clickNext(index + 1), 300);
+      };
+
+      clickNext(0);
+      return true;
+    }
+
+    sendCheckoutRequest() {
+      if (!this.rawCartData) {
+        console.error('No cart data available');
         return;
       }
 
-      // Click the button
-      removeButtons[index].click();
+      if (!this.config.apiKey || !this.config.dynamicLinkId) {
+        console.error('Missing required configuration: apiKey or dynamicLinkId');
+        return;
+      }
 
-      // Wait for DOM update before clicking next button
-      setTimeout(() => {
-        clickButtonsSequentially(index + 1);
-      }, 300);
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `${this.config.baseUrl}/checkout/squarespace`;
+
+      const formFields = {
+        'ecommerceMetadata': JSON.stringify(this.rawCartData),
+        'apiKey': this.config.apiKey,
+        'callbackSuccessUrl': `${window.location.href.split('?')[0]}?kb_payment=success`,
+        'callbackFailedUrl': window.location.href.split('?')[0],
+        'dynamicLinkId': this.config.dynamicLinkId,
+        'formDetails': JSON.stringify({})
+      };
+
+      // Add all form fields
+      Object.entries(formFields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
     }
 
-    // Start the sequential clicking process
-    clickButtonsSequentially(0);
-    return true;
-  }
+    insertPaymentButton() {
+      const checkForCartSummary = () => {
+        const cartSummary = document.querySelector('.cart-summary');
+        if (!cartSummary) {
+          setTimeout(checkForCartSummary, 500);
+          return;
+        }
 
-  function sendCheckoutRequest() {
-    // Create form element
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'http://localhost:3000/checkout/squarespace';
+        // Create payment button
+        const button = document.createElement('div');
+        button.className = 'kwickbit-button';
+        button.innerHTML = `
+          <div class="kwickbit-text">
+            <div class="kwickbit-primary">${this.config.buttonText}</div>
+            <div class="kwickbit-secondary">${this.config.buttonSubtext}</div>
+          </div>
+          <img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
+        `;
 
-    // Create hidden input for raw cart data
-    const cartDataInput = document.createElement('input');
-    cartDataInput.type = 'hidden';
-    cartDataInput.name = 'ecommerceMetadata';
-    cartDataInput.value = JSON.stringify(rawCartData);
-    form.appendChild(cartDataInput);
+        button.addEventListener('click', () => this.sendCheckoutRequest());
+        cartSummary.appendChild(button);
+      };
 
-    // Create hidden input for API key
-    const apiKeyInput = document.createElement('input');
-    apiKeyInput.type = 'hidden';
-    apiKeyInput.name = 'apiKey';
-    apiKeyInput.value = 'b5384e0f-bb6e-491e-add4-379517618ce7';
-    form.appendChild(apiKeyInput);
-
-    // Success URL with parameter - uses current page
-    const successUrlInput = document.createElement('input');
-    successUrlInput.type = 'hidden';
-    successUrlInput.name = 'callbackSuccessUrl';
-    successUrlInput.value = `${window.location.href.split('?')[0]}?kb_payment=success`;
-    form.appendChild(successUrlInput);
-
-    // Failed URL - uses current page
-    const failedUrlInput = document.createElement('input');
-    failedUrlInput.type = 'hidden';
-    failedUrlInput.name = 'callbackFailedUrl';
-    failedUrlInput.value = window.location.href.split('?')[0];
-    form.appendChild(failedUrlInput);
-
-    // Dynamic link ID
-    const dynamicLinkIdInput = document.createElement('input');
-    dynamicLinkIdInput.type = 'hidden';
-    dynamicLinkIdInput.name = 'dynamicLinkId';
-    dynamicLinkIdInput.value = 'b14f866c-d6e9-4ce6-b5ce-631bb8f63cd2';
-    form.appendChild(dynamicLinkIdInput);
-
-    // Form details
-    const formDetailsInput = document.createElement('input');
-    formDetailsInput.type = 'hidden';
-    formDetailsInput.name = 'formDetails';
-    formDetailsInput.value = JSON.stringify({});
-    form.appendChild(formDetailsInput);
-
-    // Submit form
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  }
-
-  function insertSimpleElement() {
-    const cartSummary = document.querySelector('.cart-summary');
-    if (!cartSummary) {
-      setTimeout(insertSimpleElement, 500);
-      return;
+      checkForCartSummary();
     }
-    // Create Kwickbit payment button
-    const button = document.createElement('div');
-    button.className = 'kwickbit-button';
-    button.innerHTML = `
-      <div class="kwickbit-text">
-        <div class="kwickbit-primary">Pay with crypto</div>
-        <div class="kwickbit-secondary">Powered by KwickBit</div>
-      </div>
-      <img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
-    `;
-
-    button.addEventListener('click', sendCheckoutRequest);
-    cartSummary.appendChild(button);
   }
 
-  function initialize() {
-    checkForSuccessParameter();
-    extractCartData();
-    insertSimpleElement();
-  }
+  // Export global initialization function
+  window.initKwickbit = function(config) {
+    const kwickbit = new KwickbitSquarespace(config);
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initialize);
-  } else {
-    initialize();
-  }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => kwickbit.initialize());
+    } else {
+      kwickbit.initialize();
+    }
+
+    return kwickbit;
+  };
 })();
