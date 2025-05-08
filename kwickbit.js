@@ -1,11 +1,9 @@
 (function() {
-  // Load CSS
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = 'https://cdn.jsdelivr.net/gh/kwickbit/squarespace_plugin@main/kwickbit.css';
   document.head.appendChild(link);
 
-  // Default configuration
   const defaultConfig = {
     apiKey: '',
     dynamicLinkId: '',
@@ -86,7 +84,6 @@
         }
       }
 
-      // Click buttons sequentially
       const clickNext = (index) => {
         if (index >= removeButtons.length) {
           if (onComplete) onComplete();
@@ -104,29 +101,43 @@
 
     sendCheckoutRequest() {
       if (!this.rawCartData) {
-        console.error('No cart data available');
+        console.error('Missing cart data');
         return;
       }
 
-      if (!this.config.apiKey || !this.config.dynamicLinkId) {
-        console.error('Missing required configuration: apiKey or dynamicLinkId');
+      if (!this.config.apiKey) {
+        console.error('Missing API key');
         return;
       }
+
+      if (!this.config.dynamicLinkId) {
+        console.error('Missing dynamic link ID');
+        return;
+      }
+
+      const mappedItems = this.rawCartData.cart.items.map(item => ({
+        currency: item.unitPrice.currencyCode,
+        image_url: item.image?.url,
+        name: item.productName,
+        price: Number(item.unitPrice.decimalValue),
+        quantity: item.quantity
+      }));
 
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = `${this.config.baseUrl}/checkout/squarespace`;
 
       const formFields = {
-        'ecommerceMetadata': JSON.stringify(this.rawCartData),
         'apiKey': this.config.apiKey,
-        'callbackSuccessUrl': `${window.location.href.split('?')[0]}?kb_payment=success`,
         'callbackFailedUrl': window.location.href.split('?')[0],
+        'callbackSuccessUrl': `${window.location.href.split('?')[0]}?kb_payment=success`,
         'dynamicLinkId': this.config.dynamicLinkId,
-        'formDetails': JSON.stringify({})
+        'ecommerceMetadata': JSON.stringify(this.rawCartData),
+        'formDetails': JSON.stringify({}),
+        'items': JSON.stringify(mappedItems),
+        'source': 'squarespace'
       };
 
-      // Add all form fields
       Object.entries(formFields).forEach(([name, value]) => {
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -149,7 +160,6 @@
           return;
         }
 
-        // Create payment button
         const button = document.createElement('div');
         button.className = 'kwickbit-button';
         button.innerHTML = `
@@ -168,7 +178,6 @@
     }
   }
 
-  // Export global initialization function
   window.initKwickbit = function(config) {
     const kwickbit = new KwickbitSquarespace(config);
 
