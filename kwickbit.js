@@ -9,7 +9,7 @@
   const defaultConfig = {
     apiKey: '',
     dynamicLinkId: '',
-    baseUrl: 'https://payment.kwickbit.com',
+    baseUrl: 'http://localhost:3000',
     buttonText: 'Pay with crypto',
     buttonSubtext: 'Powered by KwickBit'
   };
@@ -46,10 +46,12 @@
 
     checkForSuccessParameter() {
       const urlParams = new URLSearchParams(window.location.search);
+
       if (urlParams.get('kb_payment') === 'success') {
         this.showProcessingOverlay();
         history.replaceState(null, '', window.location.pathname);
-        this.clearCartViaAPI(0, 10, () => {
+
+        this.clearCart(0, 10, () => {
           window.location.href = window.location.origin;
         });
       }
@@ -59,11 +61,11 @@
       const cartRoot = document.getElementById('sqs-cart-root');
       if (!cartRoot) return null;
 
-      const scriptEl = cartRoot.querySelector('script[type="application/json"]');
-      if (!scriptEl) return null;
+      const scriptElement = cartRoot.querySelector('script[type="application/json"]');
+      if (!scriptElement) return null;
 
       try {
-        this.rawCartData = JSON.parse(scriptEl.textContent);
+        this.rawCartData = JSON.parse(scriptElement.textContent);
         return this.rawCartData;
       } catch (e) {
         console.error('Parse error:', e);
@@ -71,12 +73,12 @@
       }
     }
 
-    clearCartViaAPI(retryCount = 0, maxRetries = 10, onComplete = null) {
+    clearCart(retryCount = 0, maxRetries = 10, onComplete = null) {
       const removeButtons = document.querySelectorAll('button.cart-row-remove');
 
       if (!removeButtons || removeButtons.length === 0) {
         if (retryCount < maxRetries) {
-          setTimeout(() => this.clearCartViaAPI(retryCount + 1, maxRetries, onComplete), 500);
+          setTimeout(() => this.clearCart(retryCount + 1, maxRetries, onComplete), 500);
           return false;
         } else {
           if (onComplete) onComplete();
@@ -96,6 +98,7 @@
       };
 
       clickNext(0);
+
       return true;
     }
 
@@ -140,6 +143,7 @@
     insertPaymentButton() {
       const checkForCartSummary = () => {
         const cartSummary = document.querySelector('.cart-summary');
+
         if (!cartSummary) {
           setTimeout(checkForCartSummary, 500);
           return;
