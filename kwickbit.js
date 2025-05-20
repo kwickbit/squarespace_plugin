@@ -4,18 +4,13 @@
   link.href = 'https://cdn.jsdelivr.net/gh/kwickbit/squarespace_plugin@main/kwickbit.css';
   document.head.appendChild(link);
 
-  const defaultConfig = {
-    apiKey: '',
-    dynamicLinkId: '',
-    baseUrl: 'http://localhost:3000',
-    buttonText: 'Pay with crypto',
-    buttonSubtext: 'Powered by KwickBit'
-  };
-
   class KwickbitSquarespace {
     constructor(config = {}) {
-      this.config = { ...defaultConfig, ...config };
+      this.config = config;
       this.rawCartData = null;
+      this.config.baseUrl = config.isProduction ?
+        'https://api-dev.kwickbit.com' :
+        'http://localhost:3000';
     }
 
     initialize() {
@@ -36,7 +31,7 @@
       `;
 
       document.body.appendChild(overlay);
-      overlay.offsetHeight; // Force reflow
+      overlay.offsetHeight;
       overlay.classList.add('visible');
 
       return overlay;
@@ -162,10 +157,11 @@
 
         const button = document.createElement('div');
         button.className = 'kwickbit-button';
+
         button.innerHTML = `
           <div class="kwickbit-text">
-            <div class="kwickbit-primary">${this.config.buttonText}</div>
-            <div class="kwickbit-secondary">${this.config.buttonSubtext}</div>
+            <div class="kwickbit-primary">Pay with crypto</div>
+            <div class="kwickbit-secondary">Powered by KwickBit</div>
           </div>
           <img src="https://kwickbit.com/storage/2023/10/Kwickbit_logo.svg" alt="KwickBit Logo" class="kwickbit-logo">
         `;
