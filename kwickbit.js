@@ -128,9 +128,8 @@
         'callbackSuccessUrl': `${window.location.href.split('?')[0]}?kb_payment=success`,
         'dynamicLinkId': this.config.dynamicLinkId,
         'ecommerceMetadata': JSON.stringify(this.rawCartData),
-        'formDetails': JSON.stringify({}),
+        'integrationId': this.config.integrationId,
         'items': JSON.stringify(mappedItems),
-        'source': 'squarespace'
       };
 
       Object.entries(formFields).forEach(([name, value]) => {
