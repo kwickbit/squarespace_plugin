@@ -8,7 +8,6 @@ on:
         required: true
         default: 'dev'
 
-
 jobs:
   build-and-publish:
     name: 1 - Build js bundle and publish it
@@ -17,19 +16,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run release-please
-        id: release
-        uses: googleapis/release-please-action@v4
-        with:
-          release-type: node
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Exit early if no release was created
-        if: steps.release.outputs.release_created != 'true'
-        run: echo "No release created — skipping publish."
-
       - name: Set UPPER_ENV variable
-        if: steps.release.outputs.release_created == 'true'
         run: |
           echo "ENV=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
           echo "UPPER_ENV=$(echo ${{ github.event.inputs.environment }} | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
@@ -37,66 +24,57 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        if: steps.release.outputs.release_created == 'true'
         with:
           node-version: '22'
 
       - name: Set GCLOUD_PROJECT_ID_ENV variable
-        if: steps.release.outputs.release_created == 'true'
         run: echo "GCLOUD_PROJECT_ID_ENV=GCLOUD_PROJECT_ID_${{ env.UPPER_ENV }}" >> $GITHUB_ENV
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
-        if: steps.release.outputs.release_created == 'true'
         with:
           credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Fetch GCLOUD_PROJECT_ID
         id: fetch_project_id
         uses: google-github-actions/get-secretmanager-secrets@v1
-        if: steps.release.outputs.release_created == 'true'
         with:
           secrets: |
             GCLOUD_PROJECT_ID:${{ secrets.GCLOUD_INFRA_PROJECT_ID }}/${{ env.GCLOUD_PROJECT_ID_ENV }}/latest
 
       - name: Export GCLOUD_PROJECT_ID
-        if: steps.release.outputs.release_created == 'true'
         run: echo "GCLOUD_PROJECT_ID=${{ steps.fetch_project_id.outputs.GCLOUD_PROJECT_ID }}" >> $GITHUB_ENV
 
       - name: Fetch secrets from Secret Manager
         id: fetch_secrets
         uses: google-github-actions/get-secretmanager-secrets@v1
-        if: steps.release.outputs.release_created == 'true'
         with:
           secrets: |
             NUXT_PUBLIC_BACKEND_API_URL:${{ env.GCLOUD_PROJECT_ID }}/NUXT_PUBLIC_BACKEND_API_URL/latest
 
       - name: Export secrets to env
-        if: steps.release.outputs.release_created == 'true'
         run: |
           echo "NUXT_PUBLIC_BACKEND_API_URL=${{ steps.fetch_secrets.outputs.NUXT_PUBLIC_BACKEND_API_URL }}" >> $GITHUB_ENV
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        if: steps.release.outputs.release_created == 'true'
         with:
           version: 10
           run_install: true
 
       - name: Build .js bundle
-        if: steps.release.outputs.release_created == 'true'
         run: pnpm run build
         env:
           NUXT_PUBLIC_BACKEND_API_URL: ${{ env.NUXT_PUBLIC_BACKEND_API_URL }}
 
       - name: Publish to npm (prod)
-        if: ${{ steps.release.outputs.release_created == 'true' && env.LOWER_ENV == 'prod' }}
+        if: ${{ env.LOWER_ENV == 'prod' }}
         run: pnpm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
 
       - name: Publish to npm (dev or staging)
-        if: ${{ steps.release.outputs.release_created == 'true' && env.LOWER_ENV != 'prod' }}
+        if: ${{ env.LOWER_ENV != 'prod' }}
         run: pnpm publish --access public --tag ${{ env.LOWER_ENV }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
