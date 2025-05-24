@@ -1,0 +1,15 @@
+# IDE
+.idea
+.vscode
+.vs_code
+
+# transpiled files
+dist
+
+# dependencies
+node_modules
+
+# act
+.actrc
+.github-test.event
+
