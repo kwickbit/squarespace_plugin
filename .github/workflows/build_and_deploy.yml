@@ -67,14 +67,13 @@ jobs:
         env:
           NUXT_PUBLIC_BACKEND_API_URL: ${{ env.NUXT_PUBLIC_BACKEND_API_URL }}
 
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPMJS_TOKEN }}" > ~/.npmrc
+
       - name: Publish to npm (prod)
         if: ${{ env.LOWER_ENV == 'prod' }}
-        run: pnpm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+        run: pnpm publish --no-git-checks --access public
 
       - name: Publish to npm (dev or staging)
         if: ${{ env.LOWER_ENV != 'prod' }}
-        run: pnpm publish --access public --tag ${{ env.LOWER_ENV }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+        run: pnpm publish --no-git-checks --access public --tag ${{ env.LOWER_ENV }}

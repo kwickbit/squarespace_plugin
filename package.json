@@ -1,18 +1,13 @@
 {
-  "name": "kwickbit-squarespace-plugin",
+  "name": "@kwickbit/squarespace-plugin",
   "version": "1.0.0",
   "description": "",
   "main": "dist/kwickbit.min.js",
   "files": ["dist"],
   "scripts": {
-    "release": "standard-version",
-    "release:patch": "standard-version --release-as patch",
-    "release:minor": "standard-version --release-as minor",
-    "release:major": "standard-version --release-as major",
     "build": "node build.js"
   },
   "devDependencies": {
     "esbuild": "0.25.4"
-  },
-  "private": true
+  }
 }
