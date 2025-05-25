@@ -1,9 +1,10 @@
 {
   "name": "@kwickbit/squarespace-plugin",
   "version": "1.0.0",
-  "description": "",
+  "description": "Add payment with stablecoins option to your Ecommerce website",
   "main": "dist/kwickbit.min.js",
   "files": ["dist"],
+  "readme": "README.npm.md",
   "scripts": {
     "build": "node build.js"
   },
