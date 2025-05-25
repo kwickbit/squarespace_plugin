@@ -50,6 +50,24 @@ This repo is configured with an **automated publish pipeline**:
     ```
 2. Commit the result
 
+
+### 📦 npm Packaging Note
+
+> ⚠️ `.npmignore` is **ignored** since `"files"` is defined in `package.json`.
+
+Since we're using:
+
+```json
+"files": [
+  "dist/",
+  "README.md"
+]
+```
+
+Then `.npmignore` has no effect.  
+Better to stick to using field `"files"` in `package.json` than using `.npmignore`.
+
+
 ---
 
 ## 📁 Files of Interest

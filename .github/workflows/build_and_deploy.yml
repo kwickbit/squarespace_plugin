@@ -70,6 +70,11 @@ jobs:
       - name: Setup npm auth
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPMJS_TOKEN }}" > ~/.npmrc
 
+      - name: Swap in README.npm.md for publish
+        run: |
+          rm README.md
+          mv README.npm.md README.md
+
       - name: Publish to npm (prod)
         if: ${{ env.LOWER_ENV == 'prod' }}
         run: pnpm publish --no-git-checks --access public
