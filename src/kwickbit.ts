@@ -12,7 +12,6 @@ export interface KwickBitConfig {
     apiKey: string;
     dynamicLinkId: string;
     integrationId: string;
-    baseUrl?: boolean;
 }
 
 class KwickBitSquarespace {
@@ -113,7 +112,7 @@ class KwickBitSquarespace {
 
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `${this.config.baseUrl}/checkout/squarespace`;
+        form.action = `${this.baseUrl}/checkout/squarespace`;
 
         const formFields = {
             'apiKey': this.config.apiKey,
