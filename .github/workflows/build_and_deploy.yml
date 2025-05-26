@@ -13,6 +13,9 @@ on:
           - staging
           - prod
           - local
+      package_version:
+        required: true
+        description: new package version
 
 jobs:
   build-and-publish:
@@ -72,6 +75,17 @@ jobs:
         if: ${{ env.LOWER_ENV == 'local' }}
         run: |
           echo "NUXT_PUBLIC_BACKEND_API_URL=http://localhost:3000" >> $GITHUB_ENV
+
+      - name: Set PACKAGE_VERSION (prod)
+        if: ${{ env.LOWER_ENV == 'prod' }}
+        run: echo "PACKAGE_VERSION=$(echo '${{ github.event.inputs.package_version }}')" >> $GITHUB_ENV
+
+      - name: Set PACKAGE_VERSION (prod)
+        if: ${{ env.LOWER_ENV != 'prod' }}
+        run: echo "PACKAGE_VERSION=$(echo '${{ github.event.inputs.package_version }}-${{ env.LOWER_ENV }}')" >> $GITHUB_ENV
+
+      - name: Set package.json file
+        run: envsubst < package.template.json > package.json
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
