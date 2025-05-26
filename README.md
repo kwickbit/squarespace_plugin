@@ -20,7 +20,7 @@ You can use the `window.initKwickbit` call in a Squarespace Code Injection (foot
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js"></script>
 <script>
-  window.initKwickbit({
+  window.initKwickbit.default({
     apiKey: 'your-api-key-here',
     dynamicLinkId: 'your-link-id',
     integrationId: 'your-integration-id',
@@ -28,6 +28,20 @@ You can use the `window.initKwickbit` call in a Squarespace Code Injection (foot
 </script>
 ```
 
+---
+
+## 🌍 Environment-specific Deployment URLs
+
+When we deploy, we append the environment name to the `version` **except for production**.
+
+| Environment | CDN URL |
+|------------|---------|
+| `local`    | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@local/dist/index.min.js |
+| `dev`      | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@dev/dist/index.min.js |
+| `staging`  | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@staging/dist/index.min.js |
+| `prod`     | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js |
+
+> Use the matching tag depending on which backend (local, dev, staging, prod) you want your Squarespace plugin to connect to.
 
 ---
 
