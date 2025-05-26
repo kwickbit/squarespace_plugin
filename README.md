@@ -42,6 +42,8 @@ When we deploy, we append the environment name to the `version` **except for pro
 | `prod`     | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js |
 
 > Use the matching tag depending on which backend (local, dev, staging, prod) you want your Squarespace plugin to connect to.
+> 🔧 The `local` environment is mapped to `http://localhost:3000`  
+> This is useful for testing the plugin with a locally running backend.
 
 ---
 
@@ -52,18 +54,12 @@ When we deploy, we append the environment name to the `version` **except for pro
 This repo is configured with an **automated publish pipeline**:
 - It builds the bundle
 - Publishes to **npm** at `@kwickbit/squarespace-plugin`
-- Uses the version from `package.json`
+- Uses a version defined dynamically from CI input
 
 ### ⚠️ Important:
 > Once a version has been published, **it cannot be published again.**  
-> Therefore, **always bump the version in `package.json`** before triggering another publish.
-
-1. You can bump using:
-    ```sh
-    pnpm version patch      # or minor / major
-    ```
-2. Commit the result
-
+> Therefore, **always provide a new `package_version` input** when triggering a new deployment.  
+> The CI will handle tagging and publishing under the appropriate npm dist-tag (`local`, `dev`, `staging`, or `latest` for `prod`).
 
 ### 📦 npm Packaging Note
 
