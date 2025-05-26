@@ -6,7 +6,13 @@ on:
       environment:
         description: 'Target Environment'
         required: true
-        default: 'dev'
+        default: 'local'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+          - local
 
 jobs:
   build-and-publish:
@@ -28,33 +34,44 @@ jobs:
           node-version: '22'
 
       - name: Set GCLOUD_PROJECT_ID_ENV variable
+        if: ${{ env.LOWER_ENV != 'local' }}
         run: echo "GCLOUD_PROJECT_ID_ENV=GCLOUD_PROJECT_ID_${{ env.UPPER_ENV }}" >> $GITHUB_ENV
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
+        if: ${{ env.LOWER_ENV != 'local' }}
         with:
           credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Fetch GCLOUD_PROJECT_ID
         id: fetch_project_id
+        if: ${{ env.LOWER_ENV != 'local' }}
         uses: google-github-actions/get-secretmanager-secrets@v1
         with:
           secrets: |
             GCLOUD_PROJECT_ID:${{ secrets.GCLOUD_INFRA_PROJECT_ID }}/${{ env.GCLOUD_PROJECT_ID_ENV }}/latest
 
       - name: Export GCLOUD_PROJECT_ID
+        if: ${{ env.LOWER_ENV != 'local' }}
         run: echo "GCLOUD_PROJECT_ID=${{ steps.fetch_project_id.outputs.GCLOUD_PROJECT_ID }}" >> $GITHUB_ENV
 
       - name: Fetch secrets from Secret Manager
         id: fetch_secrets
+        if: ${{ env.LOWER_ENV != 'local' }}
         uses: google-github-actions/get-secretmanager-secrets@v1
         with:
           secrets: |
             NUXT_PUBLIC_BACKEND_API_URL:${{ env.GCLOUD_PROJECT_ID }}/NUXT_PUBLIC_BACKEND_API_URL/latest
 
       - name: Export secrets to env
+        if: ${{ env.LOWER_ENV != 'local' }}
         run: |
           echo "NUXT_PUBLIC_BACKEND_API_URL=${{ steps.fetch_secrets.outputs.NUXT_PUBLIC_BACKEND_API_URL }}" >> $GITHUB_ENV
+
+      - name: Export secrets to env (local)
+        if: ${{ env.LOWER_ENV == 'local' }}
+        run: |
+          echo "NUXT_PUBLIC_BACKEND_API_URL=http://localhost:3000" >> $GITHUB_ENV
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
