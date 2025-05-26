@@ -1,4 +1,4 @@
-import css from './kwickbit.css';
+import css from './index.css';
 
 function injectCss(css: string): void {
     const style = document.createElement('style');
@@ -160,7 +160,7 @@ class KwickBitSquarespace {
     }
 }
 
-(window as any).initKwickBit = function (config: KwickBitConfig) {
+export default function initKwickBit (config: KwickBitConfig) {
     const kwickbit = new KwickBitSquarespace(config);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => kwickbit.initialize());

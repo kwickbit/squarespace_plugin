@@ -1,15 +1,16 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 
-const css = fs.readFileSync('./src/kwickbit.css', 'utf8');
+const css = fs.readFileSync('./src/index.css', 'utf8');
 
 
 esbuild.build({
-    entryPoints: ['src/kwickbit.ts'],
+    entryPoints: ['src/index.ts'],
     bundle: true,
     minify: true,
-    outfile: 'dist/kwickbit.min.js',
+    outfile: 'dist/index.min.js',
     format: 'iife',
+    target: 'es2015',
     globalName: 'initKwickBit',
     define: {
         'process.env.NODE_ENV': '"production"',
