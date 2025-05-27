@@ -9,8 +9,6 @@ function injectCss(css: string): void {
 injectCss(css);
 
 export interface KwickBitConfig {
-    apiKey: string;
-    dynamicLinkId: string;
     integrationId: string;
 }
 
@@ -99,8 +97,6 @@ class KwickBitSquarespace {
 
     sendCheckoutRequest(): void {
         if (!this.rawCartData) return console.error('Missing cart data');
-        if (!this.config.apiKey) return console.error('Missing API key');
-        if (!this.config.dynamicLinkId) return console.error('Missing dynamic link ID');
 
         const mappedItems = this.rawCartData.cart.items.map((item: any) => ({
             currency: item.unitPrice.currencyCode,
@@ -115,10 +111,8 @@ class KwickBitSquarespace {
         form.action = `${this.baseUrl}/checkout/squarespace`;
 
         const formFields = {
-            'apiKey': this.config.apiKey,
             'callbackFailedUrl': window.location.href.split('?')[0],
             'callbackSuccessUrl': `${window.location.href.split('?')[0]}?kb_payment=success`,
-            'dynamicLinkId': this.config.dynamicLinkId,
             'ecommerceMetadata': JSON.stringify(this.rawCartData),
             'integrationId': this.config.integrationId,
             'items': JSON.stringify(mappedItems),

@@ -21,8 +21,6 @@ You can use the `window.initKwickbit` call in a Squarespace Code Injection (foot
 <script src="https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js"></script>
 <script>
   window.initKwickbit.default({
-    apiKey: 'your-api-key-here',
-    dynamicLinkId: 'your-link-id',
     integrationId: 'your-integration-id',
   });
 </script>

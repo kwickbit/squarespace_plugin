@@ -13,8 +13,6 @@ To enable crypto payments via KwickBit on your Squarespace store:
 <script src="https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js"></script>
 <script>
   window.initKwickbit.default({
-    apiKey: 'your-api-key-here',
-    dynamicLinkId: 'your-link-id',
     integrationId: 'your-integration-id',
   });
 </script>

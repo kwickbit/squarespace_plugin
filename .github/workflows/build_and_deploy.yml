@@ -113,3 +113,6 @@ jobs:
       - name: Publish to npm (dev or staging)
         if: ${{ env.LOWER_ENV != 'prod' }}
         run: pnpm publish --no-git-checks --access public --tag ${{ env.LOWER_ENV }}
+
+      - name: Set NUXT_PUBLIC_SQUARESPACE_TAG
+        run: echo -n "${{ env.PACKAGE_VERSION }}" | gcloud secrets versions add NUXT_PUBLIC_SQUARESPACE_TAG --project="${{ env.GCLOUD_PROJECT_ID }}" --data-file=-
