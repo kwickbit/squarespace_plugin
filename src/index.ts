@@ -98,6 +98,8 @@ class KwickBitSquarespace {
     sendCheckoutRequest(): void {
         if (!this.rawCartData) return console.error('Missing cart data');
 
+        this.updateQuantitiesFromDOM();
+
         const mappedItems = this.rawCartData.cart.items.map((item: any) => ({
             currency: item.unitPrice.currencyCode,
             image_url: item.image?.url,
@@ -129,6 +131,24 @@ class KwickBitSquarespace {
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
+    }
+
+    updateQuantitiesFromDOM(): void {
+        if (!this.rawCartData?.cart?.items) return;
+
+        this.rawCartData.cart.items = this.rawCartData.cart.items.filter((item: any) => {
+            const input = document.querySelector(`input[aria-label*="${item.productName}"]`) as HTMLInputElement;
+            if (!input) return false; // Item removed from cart
+
+            const newQuantity = parseInt(input.value);
+            item.quantity = newQuantity;
+            item.itemTotal = {
+                ...item.itemTotal,
+                value: item.unitPrice.value * newQuantity,
+                decimalValue: (item.unitPrice.value * newQuantity / Math.pow(10, item.unitPrice.fractionalDigits)).toFixed(item.unitPrice.fractionalDigits)
+            };
+            return true;
+        });
     }
 
     insertPaymentButton(): void {
