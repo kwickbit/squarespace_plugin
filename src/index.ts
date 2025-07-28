@@ -61,7 +61,7 @@ class KwickBitSquarespace {
         if (!scriptElement?.textContent) return null;
 
         try {
-            this.rawCartData = JSON.parse(scriptElement?.textContent);
+            this.rawCartData = JSON.parse(scriptElement?.textContent).cart;
             return this.rawCartData;
         } catch (e) {
             console.error('Parse error:', e);
@@ -100,7 +100,7 @@ class KwickBitSquarespace {
 
         this.updateQuantitiesFromDOM();
 
-        const mappedItems = this.rawCartData.cart.items.map((item: any) => ({
+        const mappedItems = this.rawCartData.items.map((item: any) => ({
             currency: item.unitPrice.currencyCode,
             image_url: item.image?.url,
             name: item.productName,
@@ -134,9 +134,9 @@ class KwickBitSquarespace {
     }
 
     updateQuantitiesFromDOM(): void {
-        if (!this.rawCartData?.cart?.items) return;
+        if (!this.rawCartData?.items) return;
 
-        this.rawCartData.cart.items = this.rawCartData.cart.items.filter((item: any) => {
+        this.rawCartData.items = this.rawCartData.items.filter((item: any) => {
             const input = document.querySelector(`input[aria-label*="${item.productName}"]`) as HTMLInputElement;
             if (!input) return false; // Item removed from cart
 

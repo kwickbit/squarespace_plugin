@@ -40,7 +40,7 @@ When we deploy, we append the environment name to the `version` **except for pro
 | `prod`     | https://cdn.jsdelivr.net/npm/@kwickbit/squarespace-plugin@latest/dist/index.min.js |
 
 > Use the matching tag depending on which backend (local, dev, staging, prod) you want your Squarespace plugin to connect to.
-> 🔧 The `local` environment is mapped to `http://localhost:3000`  
+> 🔧 The `local` environment is mapped to `http://localhost:3000`
 > This is useful for testing the plugin with a locally running backend.
 
 ---
@@ -55,8 +55,8 @@ This repo is configured with an **automated publish pipeline**:
 - Uses a version defined dynamically from CI input
 
 ### ⚠️ Important:
-> Once a version has been published, **it cannot be published again.**  
-> Therefore, **always provide a new `package_version` input** when triggering a new deployment.  
+> Once a version has been published, **it cannot be published again.**
+> Therefore, **always provide a new `package_version` input** when triggering a new deployment.
 > The CI will handle tagging and publishing under the appropriate npm dist-tag (`local`, `dev`, `staging`, or `latest` for `prod`).
 
 ### 📦 npm Packaging Note
@@ -72,7 +72,7 @@ Since we're using:
 ]
 ```
 
-Then `.npmignore` has no effect.  
+Then `.npmignore` has no effect.
 Better to stick to using field `"files"` in `package.json` than using `.npmignore`.
 
 
